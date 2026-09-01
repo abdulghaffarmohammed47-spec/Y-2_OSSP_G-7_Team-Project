@@ -1,15 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif;
-    background-color: #0b0f19;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    background-color: #050B14;
     color: #e2e8f0;
+    /* Subtle radial grid pattern */
+    background-image: 
+      radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0;
   }
   code, kbd, pre, samp {
-    font-family: 'Fira Code', monospace;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
   }
 }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { JobItem } from '../types';
 import { Activity, Play, XCircle, TerminalSquare, AlertCircle, Zap } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const JobsView: React.FC = () => {
   const [jobs, setJobs] = useState<JobItem[]>([]);
@@ -19,37 +20,37 @@ export const JobsView: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-6 text-sm max-w-6xl mx-auto pb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 max-w-6xl mx-auto pb-12">
       {/* Header */}
-      <div className="bg-navy-900 border border-navy-700/60 rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-elevated border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none" />
         
-        <h1 className="text-2xl font-bold text-slate-100 flex items-center gap-3 relative z-10">
+        <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 flex items-center gap-3 relative z-10">
           <Activity className="w-7 h-7 text-cyan-400" />
           Background Job Control & Concurrent Processes
         </h1>
-        <p className="text-slate-400 text-sm mt-2 relative z-10 max-w-2xl">
-          Monitor jobs started with the <code className="text-cyan-300 font-bold bg-navy-950 px-1 rounded">&amp;</code> operator or managed via <code className="text-violet-300 font-bold bg-navy-950 px-1 rounded">fg</code>, <code className="text-violet-300 font-bold bg-navy-950 px-1 rounded">bg</code>, and <code className="text-emerald-300 font-bold bg-navy-950 px-1 rounded">waitpid</code> synchronization.
+        <p className="text-slate-400 text-sm mt-2 relative z-10 max-w-2xl font-mono">
+          Monitor jobs started with the <code className="text-cyan-300 font-bold bg-workspace px-1 rounded">&amp;</code> operator or managed via <code className="text-violet-300 font-bold bg-workspace px-1 rounded">fg</code>, <code className="text-violet-300 font-bold bg-workspace px-1 rounded">bg</code>, and <code className="text-emerald-300 font-bold bg-workspace px-1 rounded">waitpid</code> synchronization.
         </p>
       </div>
 
       {/* Main Content */}
-      <div className="bg-navy-900/50 border border-navy-700/60 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm relative">
-        <div className="absolute -left-32 -bottom-32 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-elevated border border-slate-800 rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm relative">
+        <div className="absolute -left-32 -bottom-32 w-64 h-64 bg-violet-500/10 rounded-full blur-[80px] pointer-events-none" />
         
         {jobs.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center text-slate-500 relative z-10">
-             <div className="w-16 h-16 rounded-full bg-navy-800/50 flex items-center justify-center mb-4 border border-navy-700/50 shadow-inner">
-               <AlertCircle className="w-8 h-8 text-navy-500" />
+             <div className="w-16 h-16 rounded-full bg-workspace flex items-center justify-center mb-4 border border-slate-700 shadow-inner">
+               <AlertCircle className="w-8 h-8 text-slate-500" />
              </div>
-             <p className="text-sm font-bold text-slate-400">No active background jobs.</p>
-             <p className="text-xs mt-1 text-slate-500">Run a command with '&' to start a background job.</p>
+             <p className="text-sm font-bold text-slate-400 font-mono">No active background jobs.</p>
+             <p className="text-xs mt-1 text-slate-500 font-mono">Run a command with '&' to start a background job.</p>
           </div>
         ) : (
           <div className="overflow-x-auto relative z-10">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse font-mono">
               <thead>
-                <tr className="bg-navy-950/80 border-b border-navy-700/60 text-slate-400 text-xs uppercase tracking-wider">
+                <tr className="bg-workspace/80 border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
                   <th className="py-4 px-6 font-bold">Job ID</th>
                   <th className="py-4 px-6 font-bold">PID</th>
                   <th className="py-4 px-6 font-bold">State</th>
@@ -57,19 +58,19 @@ export const JobsView: React.FC = () => {
                   <th className="py-4 px-6 font-bold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-navy-800/50">
+              <tbody className="divide-y divide-slate-800/50">
                 {jobs.map((j) => (
-                  <tr key={j.job_id} className="hover:bg-navy-800/40 transition-colors group">
+                  <tr key={j.job_id} className="hover:bg-workspace transition-colors group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
                           <TerminalSquare className="w-4 h-4 text-cyan-400" />
                         </div>
-                        <span className="text-cyan-400 font-bold font-mono text-sm">[{j.job_id}]</span>
+                        <span className="text-cyan-400 font-bold text-sm">[{j.job_id}]</span>
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="text-slate-300 font-mono text-sm bg-navy-950/80 px-2.5 py-1 rounded-md border border-navy-800">{j.pid}</span>
+                      <span className="text-slate-300 text-sm bg-workspace px-2.5 py-1 rounded-md border border-slate-700">{j.pid}</span>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
@@ -87,7 +88,7 @@ export const JobsView: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6">
-                      <span className="text-slate-300 font-mono text-sm group-hover:text-white transition-colors">{j.command}</span>
+                      <span className="text-slate-300 text-sm group-hover:text-white transition-colors">{j.command}</span>
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
@@ -112,6 +113,6 @@ export const JobsView: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

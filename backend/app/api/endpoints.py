@@ -18,8 +18,13 @@ from app.services.process_service import ProcessService
 from app.services.trace_service import TraceService
 from app.services.file_service import FileService
 from app.services.history_service import HistoryService
+from app.services.command_test_service import CommandTestService
 
 router = APIRouter()
+
+@router.post("/commands/test-all")
+async def run_command_tests():
+    return CommandTestService.run_all_tests()
 
 @router.post("/explain", response_model=ExplainResponse)
 async def explain_command(payload: ExplainRequest):
@@ -135,20 +140,83 @@ async def ws_execute(websocket: WebSocket):
     await websocket.accept()
     try:
         data = await websocket.receive_text()
-        await websocket.send_json({"type": "status", "data": "RUNNING", "pid": 1234})
-        await asyncio.sleep(0.3)
         
-        res = EngineService.execute_command(data)
-        for line in res.stdout.splitlines():
-            await websocket.send_json({"type": "stdout", "data": line})
-            await asyncio.sleep(0.05)
-            
+        import os
+        import time
+        import json
+        from app.services.engine_service import EngineService
+        start_time = time.time()
+        project_root = os.path.abspath(os.path.join(os.path.dirname(EngineService.__file__), "../../../"))
+        engine_dir_win = os.path.join(project_root, "engine")
+        wsl_engine_dir = EngineService._win_to_wsl_path(engine_dir_win)
+        
+        cmd_escaped = data.replace("'", "'\\''")
+        wsl_cmd = f"cd {wsl_engine_dir} && {wsl_engine_dir}/shellforge-engine --json -c '{cmd_escaped}'"
+        
+        process = await asyncio.create_subprocess_exec(
+            "wsl", "bash", "-c", wsl_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            stdin=asyncio.subprocess.DEVNULL
+        )
+        
+        await websocket.send_json({"type": "status", "data": "RUNNING", "pid": process.pid})
+        
+        stdout_lines = []
+        json_block_lines = []
+        in_json = False
+        
+        async for line_bytes in process.stdout:
+            line = line_bytes.decode('utf-8', errors='replace').rstrip('\r\n')
+            if line.strip() == "{":
+                in_json = True
+                json_block_lines.append(line)
+            elif in_json:
+                json_block_lines.append(line)
+                if line.strip() == "}":
+                    in_json = False
+            else:
+                stdout_lines.append(line)
+                await websocket.send_json({"type": "stdout", "data": line})
+                
+        await process.wait()
+        
+        stderr_bytes = await process.stderr.read()
+        stderr = stderr_bytes.decode('utf-8', errors='replace')
+        if stderr:
+            for line in stderr.splitlines():
+                await websocket.send_json({"type": "stderr", "data": line})
+                
+        elapsed = time.time() - start_time
+        exit_code = process.returncode
+        pid, ppid = 0, 0
+        if json_block_lines:
+            try:
+                meta = json.loads("\n".join(json_block_lines))
+                pid = meta.get("pid", 0)
+                ppid = meta.get("ppid", 0)
+                exit_code = meta.get("exit_code", exit_code)
+            except Exception:
+                pass
+                
+        explanation = EngineService._generate_os_explanation(data, pid, exit_code, stderr)
+        
+        HistoryService.add(HistoryItem(
+            user_request=data,
+            generated_command=data,
+            timestamp="",
+            status="COMPLETED" if exit_code == 0 else "FAILED",
+            exit_code=exit_code,
+            working_directory=engine_dir_win
+        ))
+        
         await websocket.send_json({
             "type": "completed",
-            "exit_code": res.exit_code,
-            "pid": res.pid,
-            "ppid": res.ppid,
-            "execution_time": res.execution_time
+            "exit_code": exit_code,
+            "pid": pid,
+            "ppid": ppid,
+            "execution_time": round(elapsed, 4),
+            "explanation": explanation
         })
     except WebSocketDisconnect:
         pass

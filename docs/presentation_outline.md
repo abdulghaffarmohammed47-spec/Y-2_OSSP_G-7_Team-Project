@@ -1,70 +1,58 @@
-# ShellForge Pro: Presentation Outline
+# ShellForge Pro - PowerPoint Presentation Outline
 
-This document provides a slide-by-slide outline for your project presentation.
+## Slide 1: Title Slide
+- **Title:** ShellForge Pro - Intelligent Unix Systems Console
+- **Subtitle:** Bridging High-Level UI with Native C Systems Programming
+- **Presenters:** [Your Name / Team Name]
+- **Course:** Operating Systems and Systems Programming (OSSP)
 
----
+## Slide 2: Project Overview & Objectives
+- **What is ShellForge Pro?** An educational sandbox for Unix commands.
+- **Goal:** Visualize and manage OS concepts interactively.
+- **Core Value:** Move beyond raw terminals to an environment that explains *how* the kernel handles requests.
 
-### Slide 1: Title Slide
-* **Title:** ShellForge Pro - Intelligent Unix Systems Console
-* **Subtitle:** Translating Natural Language into Native POSIX Execution
-* **Team:** Group 7 (Mohammed Abdul Ghaffar, G. Sai Ganesh Reddy, S. Manojna Sai, Sujal Yadav)
-* **Course:** Operating Systems and Systems Programming (OSSP)
+## Slide 3: The Tri-Layer Architecture
+*Visual: A vertical stack diagram showing Frontend -> Backend -> Engine.*
+- **Frontend:** React, TypeScript, Vite. (UI, Observability, Command Lab).
+- **Backend:** Python, FastAPI. (Routing, Safety Policies, Execution Wrapper).
+- **Engine:** C, POSIX API. (Native execution, Kernel Syscalls).
 
-### Slide 2: The Problem
-* **The CLI Barrier:** The Linux command line is incredibly powerful, but the learning curve is steep. 
-* **Lack of Visibility:** Traditional terminals don't show you *how* the operating system is managing processes under the hood. 
-* **The Danger:** It is easy to make catastrophic mistakes (e.g., deleting critical directories) without understanding the impact.
+## Slide 4: The React Frontend
+- **Design Philosophy:** Premium, glassmorphism-inspired dark mode UI.
+- **Key Views:**
+  - **Intelligent Terminal:** Live execution.
+  - **Trace View:** Real-time logging of kernel syscalls.
+  - **Command Lab (Compatibility Matrix):** Visualizes the command catalog and safety categories.
 
-### Slide 3: Our Solution (ShellForge Pro)
-* **What is it?** A visual, AI-augmented terminal environment.
-* **Key Idea:** Users type what they want in plain English, and ShellForge Pro translates it, explains it, and runs it natively.
-* **Focus:** Deep visibility into Linux kernel operations and POSIX system calls.
+## Slide 5: The FastAPI Backend & Middleware
+- **Capability Registry:** Moved from brittle Regex to a structured capability routing system.
+- **Safety Service:** Strictly enforces execution boundaries based on a central JSON catalog.
+- **Command Categories:** `SAFE`, `CAUTION`, `DANGEROUS`, `INTERACTIVE`. 
 
-### Slide 4: System Architecture Overview
-* **High-Level Diagram:** 
-  `React UI` ↔ `FastAPI Backend` ↔ `Native C Engine` ↔ `Linux Kernel`
-* **Separation of Concerns:**
-  * UI is purely for observability.
-  * Backend orchestrates logic and safety.
-  * C Engine does the actual low-level OS work.
+## Slide 6: The Native C POSIX Engine
+- **Direct Kernel Interaction:** Demonstrates core OSSP concepts.
+- **Process Creation:** `fork()` and `execvp()`.
+- **Inter-Process Communication (IPC):** `pipe()` and `dup2()` for handling complex topologies like `ls -la | grep "test"`.
+- **Process Management:** `waitpid()` for status and exit codes.
 
-### Slide 5: The Frontend (Observability Viewport)
-* **Stack:** React, TypeScript, Tailwind CSS.
-* **Features:** 
-  * Interactive terminal interface.
-  * Dynamic dashboards showing processes, exit codes, and memory usage.
-  * Auto-remediation banners (e.g., clicking "Fix & Run" when a directory doesn't exist).
+## Slide 7: Security & Sandboxing (The "rm -rf" Problem)
+- **Problem:** Executing native commands from a web app is inherently dangerous.
+- **Solution:**
+  1. All execution is confined to a `/sandbox` directory.
+  2. The catalog explicitly flags and blocks destructive commands like `rm -rf /` (Flagged as `DANGEROUS`).
+  3. Interactive tools (`nano`, `vim`) are gracefully blocked to prevent process hanging.
 
-### Slide 6: The Backend (Brain & Shield)
-* **Stack:** Python, FastAPI, Groq (LLM API).
-* **Translation:** Converts text to shell syntax.
-* **Safety Guardrails:** Analyzes commands *before* they touch the C engine to prevent destructive OS actions.
+## Slide 8: Demonstration / Live Demo Flow
+1. Run a basic command (`ls -la`).
+2. Show the "Trace View" explaining the `fork()` and `execvp()` calls.
+3. Attempt to run a dangerous command (`rm -rf /`) and show the UI blocking it.
+4. Open the "Command Lab" to browse the capability matrix.
 
-### Slide 7: The Core Engine (Where the Magic Happens)
-* **Stack:** Native C, Linux WSL.
-* **The POSIX Layer:** How we interact with the kernel.
-  * `fork()`: Spawning new processes.
-  * `execvp()`: Replacing process images.
-  * `waitpid()`: Process synchronization.
-  * `pipe()` & `dup2()`: Inter-process communication and file descriptors.
+## Slide 9: Challenges & Learnings
+- **Challenge:** Safely bridging Windows (development) and Linux execution (WSL).
+- **Challenge:** Extracting structured JSON metadata from raw C stdout.
+- **Learning:** Robust system design requires strict separation of concerns (Engine for execution, Python for safety/orchestration).
 
-### Slide 8: The "Anatomy of a Command"
-* **Walkthrough:** What happens when a user types "list files"?
-  1. UI sends text to Backend.
-  2. Backend translates to `ls -la`.
-  3. C Engine intercepts, calls `fork()`.
-  4. Child calls `execvp("ls")`. Parent calls `waitpid()`.
-  5. C Engine captures stdout and exit code `0`.
-  6. Backend explains that `0` means success.
-  7. UI updates the dashboard.
-
-### Slide 9: Demo Time
-* **Live Action:** Show the interface.
-* **Scenario 1:** Run a successful command. 
-* **Scenario 2:** Run a failing command (e.g., open a missing file) to show the kernel error diagnosis.
-* **Scenario 3:** Show how the pipeline (e.g. `| grep`) creates multiple processes.
-
-### Slide 10: Conclusion & Future Scope
-* **Summary:** We successfully built a bridge between modern web architectures and low-level Linux systems programming.
-* **Future Scope:** Adding eBPF telemetry, integrating cgroups v2 for resource limitation, and supporting persistent SSH connections.
-* **Thank You & Q&A.**
+## Slide 10: Q&A
+- "Thank you!"
+- Open floor for questions.

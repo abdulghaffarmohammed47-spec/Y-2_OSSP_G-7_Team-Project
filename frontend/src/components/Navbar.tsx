@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Terminal, Cpu, Activity, History, GitCommit,
-  Folder, Shield, LayoutDashboard, Server
+  Folder, Shield, LayoutDashboard, Server, Search
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -12,38 +12,36 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'terminal', label: 'Intelligent Terminal', icon: Terminal },
+    { id: 'terminal', label: 'Console', icon: Terminal },
     { id: 'processes', label: 'Processes', icon: Cpu },
     { id: 'jobs', label: 'Jobs', icon: Activity },
     { id: 'history', label: 'History', icon: History },
-    { id: 'trace', label: 'System Calls', icon: GitCommit },
+    { id: 'trace', label: 'Trace', icon: GitCommit },
     { id: 'files', label: 'Files', icon: Folder },
-    { id: 'settings', label: 'Settings & Safety', icon: Shield },
+    { id: 'compatibility', label: 'Lab', icon: Shield },
+    { id: 'settings', label: 'Settings', icon: Server },
   ];
 
   return (
-    <header className="bg-navy-900/95 border-b border-navy-700/80 sticky top-0 z-50 backdrop-blur-md">
+    <header className="bg-elevated/80 border-b border-cyan-500/10 sticky top-0 z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           
           {/* Logo & Branding */}
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-500 via-emerald-500 to-violet-500 p-0.5 shadow-lg shadow-cyan-500/20">
-              <div className="w-full h-full bg-navy-950 rounded-[9px] flex items-center justify-center">
-                <Terminal className="w-6 h-6 text-cyan-400" />
+          <div className="flex items-center space-x-3 w-1/4">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-emerald-500 to-violet-500 p-px shadow-cyan-glow">
+              <div className="w-full h-full bg-workspace rounded-[11px] flex items-center justify-center">
+                <Terminal className="w-5 h-5 text-cyan-400" />
               </div>
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-xl text-slate-100 tracking-tight">ShellForge</span>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">PRO</span>
-              </div>
-              <p className="text-xs text-slate-400 font-mono tracking-tight font-medium">C/POSIX SYSTEMS ENGINE • OSSP</p>
+            <div className="flex items-center space-x-2">
+              <span className="font-extrabold text-lg text-slate-100 tracking-tight">ShellForge</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-cyan-500/10 text-cyan-400 border-cyan-500/30">PRO</span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex space-x-1.5 overflow-x-auto py-2">
+          <nav className="flex space-x-1 overflow-x-auto py-1 justify-center w-2/4">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -51,23 +49,48 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 whitespace-nowrap ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 whitespace-nowrap ${
                     isActive
-                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-md shadow-cyan-500/10'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-navy-800/80'
+                      ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
                   }`}
                 >
-                  <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* POSIX Status Badge */}
-          <div className="hidden lg:flex items-center space-x-2 bg-emerald-500/15 border border-emerald-500/40 px-3.5 py-1.5 rounded-full shadow-sm">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-xs font-mono font-bold text-emerald-300 tracking-wide">POSIX READY</span>
+          {/* Global Search & Status */}
+          <div className="flex items-center justify-end space-x-3 w-1/4">
+            {/* Search Input Mockup */}
+            <div className="hidden lg:flex items-center bg-slate-900/50 border border-slate-700/50 rounded-md px-2 py-1.5 group hover:border-cyan-500/50 transition-colors cursor-text">
+              <Search className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 mr-2 transition-colors" />
+              <span className="text-xs text-slate-500 font-mono">Search / Launch...</span>
+              <div className="ml-4 flex items-center space-x-1">
+                <kbd className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">Ctrl</kbd>
+                <kbd className="bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded text-[10px] font-mono border border-slate-700">K</kbd>
+              </div>
+            </div>
+
+            {/* Status Indicators */}
+            <div className="hidden xl:flex items-center space-x-3 bg-workspace/80 border border-slate-700/50 px-3 py-1.5 rounded-md text-[10px] font-mono shadow-inner">
+              <div className="flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee] animate-pulse"></span>
+                <span className="text-cyan-300">C Engine: CONNECTED</span>
+              </div>
+              <div className="w-px h-3 bg-slate-700"></div>
+              <div className="flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#10b981]"></span>
+                <span className="text-emerald-300">POSIX</span>
+              </div>
+              <div className="w-px h-3 bg-slate-700"></div>
+              <div className="flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_5px_#8b5cf6]"></span>
+                <span className="text-violet-300">cgroups v2</span>
+              </div>
+            </div>
           </div>
 
         </div>

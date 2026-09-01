@@ -1,58 +1,73 @@
-# ShellForge Pro 🚀
+# ShellForge Pro - Intelligent Unix Systems Console
 
-> **Intelligent Unix Systems Console & AI-Powered Terminal Emulator**
+ShellForge Pro is a modern, high-performance web-based terminal interface that safely bridges user inputs with native POSIX execution. Designed for Operating Systems and Systems Programming (OSSP), it demonstrates the seamless integration of a React frontend, a FastAPI backend, and a C-based native systems engine (`shellforge-engine`).
 
-ShellForge Pro is an educational and highly advanced Unix shell environment designed to bridge the gap between complex Linux command-line interfaces and modern, accessible web interfaces. It translates natural-language requests into validated POSIX shell commands, executes them securely via a custom native C engine, and visualizes process activity in real-time.
+## 🚀 Features
 
----
+- **Intelligent Terminal:** Interactively run Unix commands with real-time output streaming.
+- **Safety First:** Built-in capability registry classifies commands (e.g., SAFE, CAUTION, DANGEROUS) and enforces strict execution policies.
+- **Trace & Observability:** Detailed breakdown of system calls (`fork`, `execvp`, `pipe`, `waitpid`) used during command execution.
+- **Command Compatibility Matrix:** Browse native POSIX commands supported by the engine, complete with safety classifications and handler mapping.
+- **Native Execution:** Commands are executed natively by the `shellforge-engine` binary inside a Linux (WSL) sandbox.
 
-## 👥 Team Members (Group 7)
-* **2510030369** – Mohammed Abdul Ghaffar
-* **251003086**  – G. Sai Ganesh Reddy
-* **2510030070** – S. Manojna Sai
-* **2510030116** – Sujal Yadav
+## 🏗️ Architecture Stack
 
-**Course:** Operating Systems and Systems Programming (OSSP)
+1. **Frontend (React, TypeScript, TailwindCSS, Vite):**
+   - Provides a stunning, glassmorphism-inspired UI.
+   - Communicates with the backend via REST APIs.
+   - Provides multiple observability views: Terminal, Processes, Jobs, History, Trace, and Command Lab.
 
----
+2. **Backend (Python, FastAPI, Uvicorn):**
+   - Handles REST API requests and CORS.
+   - Validates incoming commands using the `CommandCatalogService`.
+   - Routes commands using the `CapabilityRegistry`.
+   - Spawns the `shellforge-engine` via `subprocess` in a sandboxed directory.
+   - Diagnoses kernel and execution errors to generate human-readable explanations.
 
-## ✨ Core Features
-* **AI Command Translation:** Type "list all hidden files" and ShellForge Pro translates it to `ls -la`.
-* **Kernel Error Remediation:** If a command fails (e.g., `ENOENT`), the UI explains why and offers a clickable "Fix & Run" solution.
-* **Native Execution Engine:** Bypasses basic terminal wrappers by interacting directly with the Linux kernel using standard POSIX system calls.
-* **Observability Viewport:** Real-time dashboards tracking CPU, memory, active processes, and background jobs.
-* **Safety Guardrails:** Prevents destructive commands (like `rm -rf /`) from being executed on the host system.
+3. **Engine (C, POSIX API):**
+   - Implements native systems programming concepts.
+   - Performs tokenization, parsing, and execution.
+   - Handles advanced POSIX topologies like pipes (`|`) using `fork`, `execvp`, and `dup2`.
 
-## 🏗️ Technology Stack
-* **Frontend:** React, TypeScript, Vite, Tailwind CSS
-* **Backend Integration:** Python 3.11+, FastAPI, Uvicorn, Groq API (LLM)
-* **Systems Engine:** C (GCC), POSIX APIs, Linux Kernel (via WSL)
+## ⚙️ Setup and Installation
 
-## 🚀 Quick Start
+### Prerequisites
+- Node.js (v16+)
+- Python (3.9+)
+- WSL (Windows Subsystem for Linux) installed with `bash` available.
+- GCC (inside WSL) to compile the engine.
 
-### 1. Build the C Engine
+### 1. Compile the Native Engine
+Ensure the engine is compiled for Linux so it can be executed via WSL.
 ```bash
 cd engine
-make
+gcc -o shellforge-engine main.c parser.c executor.c -Wall -Wextra
 ```
 
-### 2. Start the FastAPI Backend
+### 2. Start the Backend Server
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # (or .venv\Scripts\activate on Windows)
+source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+python -m uvicorn app.main:app --reload
 ```
+*The backend runs on http://localhost:8000*
 
-### 3. Start the React Frontend
+### 3. Start the Frontend App
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+*The frontend runs on http://localhost:5173*
 
-Navigate to `http://localhost:5173` in your browser to access the ShellForge Pro UI.
+## 🧪 Testing
 
----
-*Built for the OSSP Course - Emphasizing POSIX standards, systems programming, and modern software architecture.*
+An automated test suite verifies the execution of all commands in the catalog against the sandbox environment.
+
+Run the test suite via the API:
+```bash
+curl -X POST http://localhost:8000/api/commands/test-all
+```
+This will generate a detailed markdown report at `docs/command_test_report.md`.

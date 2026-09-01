@@ -6,7 +6,13 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+      },
       colors: {
+        workspace: '#050B14',
+        elevated: '#0F172A',
         navy: {
           950: '#070b14',
           900: '#0a101d',
@@ -14,12 +20,18 @@ export default {
           700: '#1e293b'
         },
         linux: {
-          green: '#10b981',
-          cyan: '#06b6d4',
-          violet: '#8b5cf6',
-          yellow: '#f59e0b',
-          red: '#ef4444'
+          green: '#10B981',
+          cyan: '#22D3EE',
+          violet: '#8B5CF6',
+          amber: '#F59E0B',
+          red: '#EF4444'
         }
+      },
+      boxShadow: {
+        'cyan-glow': '0 0 15px rgba(34, 211, 238, 0.15)',
+        'emerald-glow': '0 0 15px rgba(16, 185, 129, 0.15)',
+        'amber-glow': '0 0 15px rgba(245, 158, 11, 0.15)',
+        'red-glow': '0 0 15px rgba(239, 68, 68, 0.15)'
       },
       animation: {
         'gradient-x': 'gradient-x 3s ease infinite',
@@ -42,8 +54,8 @@ export default {
           '50%': { transform: 'translateY(-5px)' },
         },
         'glow': {
-          '0%': { boxShadow: '0 0 5px theme("colors.cyan.400"), 0 0 20px theme("colors.cyan.400")' },
-          '100%': { boxShadow: '0 0 10px theme("colors.cyan.500"), 0 0 30px theme("colors.cyan.500")' },
+          '0%': { boxShadow: '0 0 5px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.4)' },
+          '100%': { boxShadow: '0 0 10px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.6)' },
         }
       }
     },

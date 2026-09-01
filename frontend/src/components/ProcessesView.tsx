@@ -1,7 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { ProcessItem } from '../types';
-import { Cpu, RefreshCw, AlertCircle, Layers, X } from 'lucide-react';
+import { Cpu, RefreshCw, AlertCircle, Layers, X, Activity, Play, Square, Hash } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const ProcessTreeItem = ({ process, allProcesses, depth = 0 }: { process: ProcessItem, allProcesses: ProcessItem[], depth?: number }) => {
+  const children = allProcesses.filter(p => p.ppid === process.pid);
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="font-mono text-xs">
+      <div 
+        className={`flex items-center gap-3 py-1.5 px-2 hover:bg-slate-800/50 rounded cursor-pointer transition-colors ${depth === 0 ? 'text-cyan-400 font-bold' : 'text-slate-300'}`}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <span style={{ width: depth * 20 }} className="flex-shrink-0" />
+        {children.length > 0 ? (
+          <span className="text-slate-500 w-4 text-center">{expanded ? '▼' : '▶'}</span>
+        ) : (
+          <span className="w-4" />
+        )}
+        <span className="text-slate-500">[{process.pid}]</span>
+        <span className="truncate">{process.name}</span>
+        <span className="ml-auto text-emerald-400 text-[10px] bg-emerald-950/30 px-1.5 rounded">{process.state}</span>
+      </div>
+      
+      {expanded && children.length > 0 && (
+        <div className="border-l border-slate-800 ml-4">
+          {children.map(child => (
+            <ProcessTreeItem key={child.pid} process={child} allProcesses={allProcesses} depth={depth + 1} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ProcessesView: React.FC = () => {
   const [processes, setProcesses] = useState<ProcessItem[]>([]);
@@ -23,7 +56,7 @@ export const ProcessesView: React.FC = () => {
 
   useEffect(() => {
     fetchProcesses();
-    const interval = setInterval(fetchProcesses, 4000);
+    const interval = setInterval(fetchProcesses, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -32,88 +65,97 @@ export const ProcessesView: React.FC = () => {
     fetchProcesses();
   };
 
+  // Find root processes (processes whose PPID is not in the current list, usually PPID 0 or 1 or just the lowest)
+  const processIds = new Set(processes.map(p => p.pid));
+  const rootProcesses = processes.filter(p => !processIds.has(p.ppid));
+
   return (
-    <div className="space-y-6 font-mono text-xs">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
       
       {/* Header */}
-      <div className="bg-navy-900 border border-navy-700/60 rounded-xl p-6 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-violet-400" />
-            <span>Linux Process Monitor & Hierarchy</span>
-          </h1>
-          <p className="text-slate-400 text-xs mt-1">
-            Real process entries fetched from Linux /proc filesystem and process table.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex bg-navy-950 p-1 rounded-lg border border-navy-700">
-            <button
-              onClick={() => setActiveTab('table')}
-              className={`px-3 py-1.5 rounded text-xs font-semibold ${activeTab === 'table' ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-400'}`}
-            >
-              Table View
-            </button>
-            <button
-              onClick={() => setActiveTab('tree')}
-              className={`px-3 py-1.5 rounded text-xs font-semibold ${activeTab === 'tree' ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-400'}`}
-            >
-              Process Tree
-            </button>
+      <div className="bg-elevated/80 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none transition-colors" />
+        
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div>
+            <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 flex items-center gap-3">
+              <Cpu className="w-7 h-7 text-cyan-400" />
+              Process Telemetry
+            </h1>
+            <p className="text-slate-400 text-sm mt-2 font-mono">
+              Live htop-style monitoring & signal routing
+            </p>
           </div>
 
-          <button
-            onClick={fetchProcesses}
-            className="p-2 bg-navy-800 hover:bg-navy-700 text-slate-300 rounded-lg border border-navy-700 transition"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex bg-workspace border border-slate-800 rounded-xl p-1 shadow-inner">
+              <button
+                onClick={() => setActiveTab('table')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'table' ? 'bg-slate-800 text-cyan-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                Table View
+              </button>
+              <button
+                onClick={() => setActiveTab('tree')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'tree' ? 'bg-slate-800 text-cyan-400 shadow' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                Hierarchy Tree
+              </button>
+            </div>
+
+            <button
+              onClick={fetchProcesses}
+              className="p-2.5 bg-workspace hover:bg-slate-800 text-cyan-400 rounded-xl border border-slate-800 transition shadow"
+              title="Refresh Telemetry"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Table View */}
-      {activeTab === 'table' && (
-        <div className="bg-navy-900 border border-navy-700/60 rounded-xl shadow-xl overflow-hidden">
+      {/* Main Content Area */}
+      <motion.div 
+        key={activeTab}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-elevated border border-slate-800 rounded-2xl shadow-xl overflow-hidden"
+      >
+        {activeTab === 'table' && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-navy-950 border-b border-navy-700 text-slate-400">
-                  <th className="py-3 px-4">PID</th>
-                  <th className="py-3 px-4">PPID</th>
-                  <th className="py-3 px-4">State</th>
-                  <th className="py-3 px-4">Command</th>
-                  <th className="py-3 px-4 text-right">CPU %</th>
-                  <th className="py-3 px-4 text-right">MEM %</th>
-                  <th className="py-3 px-4 text-center">Actions</th>
+                <tr className="bg-workspace/80 border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                  <th className="py-4 px-6 font-mono">PID</th>
+                  <th className="py-4 px-6 font-mono">PPID</th>
+                  <th className="py-4 px-6">State</th>
+                  <th className="py-4 px-6">Command</th>
+                  <th className="py-4 px-6 text-right font-mono">CPU %</th>
+                  <th className="py-4 px-6 text-right font-mono">MEM %</th>
+                  <th className="py-4 px-6 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-navy-800">
+              <tbody className="divide-y divide-slate-800/50 text-sm font-mono">
                 {processes.map((p) => (
-                  <tr key={p.pid} className="hover:bg-navy-800/50 transition">
-                    <td className="py-2.5 px-4 text-cyan-400 font-bold">{p.pid}</td>
-                    <td className="py-2.5 px-4 text-slate-400">{p.ppid}</td>
-                    <td className="py-2.5 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
+                  <tr key={p.pid} className="hover:bg-workspace transition-colors group">
+                    <td className="py-3 px-6 text-cyan-400">{p.pid}</td>
+                    <td className="py-3 px-6 text-slate-500">{p.ppid}</td>
+                    <td className="py-3 px-6">
+                      <span className="px-2 py-1 rounded-md text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-bold">
                         {p.state}
                       </span>
                     </td>
-                    <td className="py-2.5 px-4 text-slate-200 truncate max-w-[260px]">{p.cmdline}</td>
-                    <td className="py-2.5 px-4 text-right text-emerald-400">{p.cpu_percent}%</td>
-                    <td className="py-2.5 px-4 text-right text-violet-400">{p.memory_percent}%</td>
-                    <td className="py-2.5 px-4 text-center space-x-1.5">
+                    <td className="py-3 px-6 text-slate-300 truncate max-w-[200px] xl:max-w-[400px] opacity-80 group-hover:opacity-100 transition-opacity">
+                      {p.cmdline}
+                    </td>
+                    <td className="py-3 px-6 text-right text-emerald-400">{p.cpu_percent.toFixed(1)}%</td>
+                    <td className="py-3 px-6 text-right text-violet-400">{p.memory_percent.toFixed(1)}%</td>
+                    <td className="py-3 px-6 text-center">
                       <button
                         onClick={() => setSelectedProc(p)}
-                        className="px-2 py-1 rounded bg-navy-800 hover:bg-navy-700 text-slate-300 text-[10px]"
+                        className="px-3 py-1.5 rounded-lg bg-workspace border border-slate-700 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-400 text-xs transition-colors"
                       >
                         Inspect
-                      </button>
-                      <button
-                        onClick={() => handleSendSignal(p.pid, 15)}
-                        className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-300 text-[10px]"
-                      >
-                        Term (15)
                       </button>
                     </td>
                   </tr>
@@ -121,96 +163,105 @@ export const ProcessesView: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Process Tree View (Phase 16) */}
-      {activeTab === 'tree' && (
-        <div className="bg-navy-900 border border-navy-700/60 rounded-xl p-6 shadow-xl space-y-4">
-          <div className="flex items-center gap-2 text-slate-300 font-semibold mb-4">
-            <Layers className="w-4 h-4 text-cyan-400" />
-            <span>Process Tree Hierarchy (PID / PPID mapping)</span>
+        {activeTab === 'tree' && (
+          <div className="p-6">
+            <div className="flex items-center gap-2 text-slate-400 font-semibold mb-6 text-sm uppercase tracking-wider">
+              <Layers className="w-4 h-4 text-cyan-400" />
+              <span>Process Ancestry Map</span>
+            </div>
+            <div className="bg-workspace p-4 rounded-xl border border-slate-800 overflow-x-auto">
+              {rootProcesses.length > 0 ? (
+                rootProcesses.map(p => (
+                  <ProcessTreeItem key={p.pid} process={p} allProcesses={processes} />
+                ))
+              ) : (
+                <div className="text-slate-500 font-mono text-sm text-center py-10">No processes found.</div>
+              )}
+            </div>
           </div>
+        )}
+      </motion.div>
 
-          <div className="bg-navy-950 p-4 rounded-lg border border-navy-800 space-y-3">
-            <div className="text-cyan-400">systemd (PID 1)</div>
-            <div className="pl-6 border-l border-navy-700 space-y-2">
-              <div className="text-slate-300">└── init / bash (PID 28)</div>
-              <div className="pl-6 border-l border-navy-700 space-y-2">
-                <div className="text-emerald-400">└── shellforge_engine (PID 387)</div>
-                <div className="pl-6 border-l border-navy-700 space-y-1 text-violet-300">
-                  {processes.slice(0, 5).map((p) => (
-                    <div key={p.pid}>├── {p.name} (PID {p.pid}, PPID {p.ppid})</div>
-                  ))}
+      {/* Modal Overlay */}
+      <AnimatePresence>
+        {selectedProc && (
+          <div className="fixed inset-0 bg-workspace/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-elevated border border-slate-700 rounded-2xl p-6 max-w-lg w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-[40px] pointer-events-none" />
+              
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4 relative z-10">
+                <h3 className="font-extrabold text-lg text-slate-100 flex items-center gap-2 font-mono">
+                  <Hash className="w-5 h-5 text-cyan-400" />
+                  PID {selectedProc.pid}
+                </h3>
+                <button onClick={() => setSelectedProc(null)} className="text-slate-500 hover:text-slate-300 transition">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 text-sm text-slate-300 font-mono relative z-10 mb-6">
+                <div className="flex items-center justify-between p-3 bg-workspace rounded-lg border border-slate-800">
+                  <span className="text-slate-500">Parent (PPID)</span>
+                  <span className="text-cyan-400 font-bold">{selectedProc.ppid}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-workspace rounded-lg border border-slate-800">
+                    <span className="text-slate-500 block text-xs mb-1">CPU Usage</span>
+                    <span className="text-emerald-400 font-bold text-lg">{selectedProc.cpu_percent.toFixed(1)}%</span>
+                  </div>
+                  <div className="p-3 bg-workspace rounded-lg border border-slate-800">
+                    <span className="text-slate-500 block text-xs mb-1">Memory</span>
+                    <span className="text-violet-400 font-bold text-lg">{selectedProc.memory_percent.toFixed(1)}%</span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-workspace rounded-lg border border-slate-800">
+                  <span className="text-slate-500 block text-xs mb-2">Command Array</span>
+                  <div className="text-slate-300 text-xs break-all bg-slate-900 p-2 rounded">
+                    {selectedProc.cmdline}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Process Detail Modal */}
-      {selectedProc && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-navy-900 border border-navy-700 rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-navy-800 pb-3">
-              <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-cyan-400" />
-                <span>Process Inspection (PID {selectedProc.pid})</span>
-              </h3>
-              <button onClick={() => setSelectedProc(null)} className="text-slate-400 hover:text-slate-200">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-navy-800">
-                <span className="text-slate-500">Parent PID (PPID):</span>
-                <span className="text-cyan-400">{selectedProc.ppid}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-navy-800">
-                <span className="text-slate-500">State:</span>
-                <span className="text-emerald-400">{selectedProc.state}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-navy-800">
-                <span className="text-slate-500">CPU Usage:</span>
-                <span>{selectedProc.cpu_percent}%</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-navy-800">
-                <span className="text-slate-500">Memory Usage:</span>
-                <span>{selectedProc.memory_percent}%</span>
-              </div>
-              <div className="py-1">
-                <span className="text-slate-500 block mb-1">Command String:</span>
-                <div className="bg-navy-950 p-2 rounded border border-navy-800 font-mono text-cyan-300">
-                  {selectedProc.cmdline}
+              {/* Signals Array */}
+              <div className="border-t border-slate-800 pt-4 relative z-10">
+                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-3 block">POSIX Signals</span>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => { handleSendSignal(selectedProc.pid, 19); setSelectedProc(null); }}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 transition-colors"
+                  >
+                    <Square className="w-4 h-4 mb-1" />
+                    <span className="text-[10px] font-bold">SIGSTOP (19)</span>
+                  </button>
+                  <button
+                    onClick={() => { handleSendSignal(selectedProc.pid, 18); setSelectedProc(null); }}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-colors"
+                  >
+                    <Play className="w-4 h-4 mb-1" />
+                    <span className="text-[10px] font-bold">SIGCONT (18)</span>
+                  </button>
+                  <button
+                    onClick={() => { handleSendSignal(selectedProc.pid, 9); setSelectedProc(null); }}
+                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-colors"
+                  >
+                    <X className="w-4 h-4 mb-1" />
+                    <span className="text-[10px] font-bold">SIGKILL (9)</span>
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3">
-              <button
-                onClick={() => { handleSendSignal(selectedProc.pid, 19); setSelectedProc(null); }}
-                className="px-3 py-1.5 rounded bg-amber-500/20 text-amber-300 text-xs"
-              >
-                Stop (SIGSTOP)
-              </button>
-              <button
-                onClick={() => { handleSendSignal(selectedProc.pid, 18); setSelectedProc(null); }}
-                className="px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-300 text-xs"
-              >
-                Continue (SIGCONT)
-              </button>
-              <button
-                onClick={() => { handleSendSignal(selectedProc.pid, 9); setSelectedProc(null); }}
-                className="px-3 py-1.5 rounded bg-red-500/20 text-red-300 text-xs font-bold"
-              >
-                Kill (SIGKILL)
-              </button>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );

@@ -1,8 +1,7 @@
 import os
 import json
 from dotenv import load_dotenv
-# pyrefly: ignore [missing-import]
-from groq import AsyncGroq
+from google import genai
 from app.schemas.command import ExplainResponse, ExplainBreakdown
 
 load_dotenv()
@@ -10,13 +9,13 @@ load_dotenv()
 class ExplainService:
     @staticmethod
     async def explain(query: str, level: str = "beginner") -> ExplainResponse:
-        api_key = os.getenv("GROQ_API_KEY")
+        api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             return ExplainResponse(
                 user_query=query,
                 normalized_intent="Missing API Key",
                 generated_command=query,
-                summary="Please configure GROQ_API_KEY to enable AI explanations.",
+                summary="Please configure GEMINI_API_KEY to enable AI explanations.",
                 breakdown=[],
                 os_flow=["Shell receives request", "Execution failed"],
                 relevant_syscalls=[],
@@ -25,7 +24,7 @@ class ExplainService:
             )
 
         try:
-            client = AsyncGroq(api_key=api_key)
+            client = genai.Client(api_key=api_key)
             system_prompt = f"""You are a Linux OS professor explaining what happens when a user runs a command.
 Target audience level: {level}
 Explain the following query: "{query}"
@@ -49,17 +48,17 @@ Output ONLY valid JSON matching this schema exactly:
 }}
 """
 
-            chat_completion = await client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": query}
-                ],
-                model="qwen/qwen3.8-27b",
-                temperature=0.2,
-                response_format={"type": "json_object"}
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=query,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.2,
+                    response_mime_type="application/json",
+                ),
             )
             
-            data = json.loads(chat_completion.choices[0].message.content)
+            data = json.loads(response.text)
             
             return ExplainResponse(
                 user_query=data.get("user_query", query),

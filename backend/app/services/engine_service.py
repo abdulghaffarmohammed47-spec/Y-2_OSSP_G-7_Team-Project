@@ -10,12 +10,14 @@ ENGINE_REL_DIR = "engine"
 
 class EngineService:
     @staticmethod
-    def execute_command(command_str: str) -> ExecutionResult:
+    def execute_command(command_str: str, working_dir: str = None) -> ExecutionResult:
         start_time = time.time()
         
         # Determine root project directory
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
         engine_dir_win = os.path.join(project_root, "engine")
+        
+        target_dir_win = working_dir if working_dir else engine_dir_win
         
         # Mock execution for sudo apt-get to avoid hangs during presentation
         if command_str.startswith("sudo apt-get install"):
@@ -31,21 +33,24 @@ class EngineService:
                 status="COMPLETED",
                 signal=0,
                 execution_time=1.05,
-                working_directory=engine_dir_win,
+                working_directory=target_dir_win,
                 explanation=EngineService._generate_os_explanation(command_str, 9821, 0)
             )
 
         # Command to run shellforge-engine inside engine directory via WSL
-        wsl_dir = EngineService._win_to_wsl_path(engine_dir_win)
+        wsl_engine_dir = EngineService._win_to_wsl_path(engine_dir_win)
+        wsl_target_dir = EngineService._win_to_wsl_path(target_dir_win)
+        
         cmd_escaped = command_str.replace("'", "'\\''")
-        wsl_cmd = f"cd {wsl_dir} && ./shellforge-engine --json -c '{cmd_escaped}'"
+        wsl_cmd = f"cd {wsl_target_dir} && {wsl_engine_dir}/shellforge-engine --json -c '{cmd_escaped}'"
         cmd = ["wsl", "bash", "-c", wsl_cmd]
         
         try:
             res = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=15,
                 stdin=subprocess.DEVNULL
             )
