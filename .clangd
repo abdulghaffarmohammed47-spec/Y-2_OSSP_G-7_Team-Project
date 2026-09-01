@@ -1,0 +1,11 @@
+CompileFlags:
+  Add:
+    - -Iinclude
+    - -Isrc
+    - -Iengine/include
+    - -Iengine/src
+    - -D_GNU_SOURCE
+
+Diagnostics:
+  Suppress:
+    - pp_file_not_found

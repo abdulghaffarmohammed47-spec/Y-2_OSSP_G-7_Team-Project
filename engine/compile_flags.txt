@@ -1,0 +1,6 @@
+-Iinclude
+-Isrc
+-I../include
+-Wall
+-Wextra
+-D_GNU_SOURCE
